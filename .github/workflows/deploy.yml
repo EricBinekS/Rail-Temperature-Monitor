@@ -1,0 +1,54 @@
+name: Deploy Rail Monitor
+
+on:
+  push:
+    branches: ["main"]
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Baixar Código
+        uses: actions/checkout@v4
+
+      - name: 🐍 Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: 📦 Instalar Dependências Python
+        run: |
+          cd rail-monitor/backend
+          pip install -r requirements.txt
+
+      - name: 🚀 Rodar Script de Dados
+        run: |
+          cd rail-monitor/backend
+          python main.py
+          # O script vai gerar o dashboard_data.json na pasta do frontend
+
+      - name: 🟢 Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Instalar e Construir Site
+        run: |
+          cd rail-monitor/frontend
+          npm install
+          npm run build
+
+      - name: 🌐 Publicar Online
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: rail-monitor/frontend/dist
+          branch: gh-pages 
